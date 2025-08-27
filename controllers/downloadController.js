@@ -560,5 +560,11 @@ module.exports = {
   downloadAuto,
   downloadInstagram,
   downloadTikTok,
-  downloadTwitter
+  downloadTwitter,
+  fetchFromInstagramAPI,
+  fetchFromInstagramMediaAPI,
+  fetchFromInstagramFallbackAPI,
+  fetchFromTikTokAPI,
+  fetchFromTikTokWebScraping,
+  fetchFromTwitterAPI
 };

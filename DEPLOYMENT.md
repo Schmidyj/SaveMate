@@ -86,9 +86,11 @@ RAPIDAPI_KEY=your_actual_rapidapi_key_here
 
 1. **Health Check**: Visit `https://your-site.netlify.app/.netlify/functions/health`
 
-2. **Test Download**: Use the web interface to test downloads
+2. **Debug Info**: Visit `https://your-site.netlify.app/.netlify/functions/debug`
 
-3. **Check Logs**: Go to Netlify Dashboard > Functions > View logs
+3. **Test Download**: Use the web interface to test downloads
+
+4. **Check Logs**: Go to Netlify Dashboard > Functions > View logs
 
 ## 🐛 Troubleshooting
 
