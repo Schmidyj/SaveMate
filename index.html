@@ -116,7 +116,11 @@
 
                 const url = urlInput.value.trim();
                 const platform = platformSelect.value;
-                const backendUrl = `http://localhost:3001/api/download/${platform}`;
+                // Use production URL when not on localhost, otherwise use localhost for development
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocalhost 
+            ? `http://localhost:3001/api/download/${platform}`
+            : `${window.location.origin}/.netlify/functions/download`;
 
                 try {
                     const response = await fetch(backendUrl, {
