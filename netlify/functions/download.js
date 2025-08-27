@@ -8,8 +8,6 @@ const {
 } = require('../../controllers/downloadController');
 
 exports.handler = async (event, context) => {
-  // Set timeout to 25 seconds (Netlify max is 30, but we want some buffer)
-  context.callbackWaitsForEmptyEventLoop = false;
   // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -28,29 +26,8 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const path = event.path.replace('/.netlify/functions/download', '');
-    const method = event.httpMethod;
-
-    // Parse platform from request body first, then path, then default to 'auto'
-    let platform = 'auto';
+    console.log('🚀 Download function called');
     
-    if (requestPlatform && requestPlatform !== 'auto') {
-      platform = requestPlatform;
-    } else {
-      // Extract platform from URL path as fallback
-      const pathSegments = event.path.split('/');
-      if (pathSegments.includes('instagram')) {
-        platform = 'instagram';
-      } else if (pathSegments.includes('tiktok')) {
-        platform = 'tiktok';
-      } else if (pathSegments.includes('twitter') || pathSegments.includes('x')) {
-        platform = 'twitter';
-      } else {
-        // Default to auto-detect
-        platform = 'auto';
-      }
-    }
-
     // Parse request body
     let body = {};
     if (event.body) {
@@ -58,6 +35,7 @@ exports.handler = async (event, context) => {
     }
 
     const { url, platform: requestPlatform } = body;
+    console.log('📥 Received request:', { url, platform: requestPlatform });
 
     if (!url) {
       return {
@@ -67,13 +45,26 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Determine platform
+    let platform = 'auto';
+    if (requestPlatform && requestPlatform !== 'auto') {
+      platform = requestPlatform;
+    } else {
+      // Auto-detect platform from URL
+      if (url.includes('instagram.com')) {
+        platform = 'instagram';
+      } else if (url.includes('tiktok.com')) {
+        platform = 'tiktok';
+      } else if (url.includes('twitter.com') || url.includes('x.com')) {
+        platform = 'twitter';
+      }
+    }
+
     console.log(`🔍 Processing ${platform} download for URL: ${url}`);
-    console.log(`📍 Function path: ${event.path}`);
     console.log(`🌐 Request origin: ${event.headers.origin || 'Unknown'}`);
     console.log(`🔑 RAPIDAPI_KEY set: ${process.env.RAPIDAPI_KEY ? 'Yes' : 'No'}`);
 
     let result;
-    let processingError = null;
     
     try {
       if (platform === 'instagram') {
@@ -117,22 +108,26 @@ exports.handler = async (event, context) => {
       console.log('✅ Download function completed successfully');
       console.log('📊 Result:', JSON.stringify(result, null, 2));
       
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(result)
+      };
+      
     } catch (downloadError) {
       console.error('❌ Download function failed:', downloadError);
-      processingError = downloadError;
-      result = {
-        error: 'Download failed',
-        message: downloadError.message || 'An error occurred during download',
-        platform,
-        url
+      
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Download failed',
+          message: downloadError.message || 'An error occurred during download',
+          platform,
+          url
+        })
       };
     }
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(result)
-    };
 
   } catch (error) {
     console.error('Serverless function error:', error);
@@ -141,7 +136,7 @@ exports.handler = async (event, context) => {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: 'Download failed', 
+        error: 'Server error', 
         message: error.message || 'An unexpected error occurred' 
       })
     };
